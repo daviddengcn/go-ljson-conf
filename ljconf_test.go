@@ -1,12 +1,14 @@
 package ljconf
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
 
 func TestBasic(t *testing.T) {
-	cf := Load("fortest.conf")
+	cf, _ := Load("fortest.conf")
+	fmt.Println("Loaded:", cf.Object("", nil))
 	// a case: ["key", "def", "exp"]
 	cases := [][3]interface{}{
 		// string
@@ -32,6 +34,10 @@ func TestBasic(t *testing.T) {
 		{"http.users", []string(nil), []string{"apple", "banana", "cat", "david"}},
 		// int-list
 		{"http.users", []int(nil), []int{0, 0, 0, 0}},
+		
+		// included
+		{"sub.value", "", "hello"},
+		{"http.sub.value", "", "hello"},
 	}
 
 	for _, c := range cases {

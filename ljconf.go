@@ -13,8 +13,37 @@ type Conf struct {
 	db   map[string]interface{}
 }
 
-// Load reads configurations from a speicified file
-func Load(path string) (conf *Conf) {
+const INCLUDE_KEY_TAG = "#include#"
+
+func loadInclude(db map[string]interface{}) {
+	for k, v := range db {
+		if k == INCLUDE_KEY_TAG {
+			switch paths := v.(type) {
+			case string:
+				fmt.Println("Including", paths)
+				sub, err := Load(paths)
+				if err == nil {
+					// merge into current db
+					for sk, sv := range sub.db {
+						db[sk] = sv
+					}
+					// remove this entry
+					delete(db, k)
+					continue
+				}
+			}
+		}
+		
+		
+		if mv, ok := v.(map[string]interface{}); ok {
+			loadInclude(mv)
+		}
+	}
+}
+
+// Load reads configurations from a speicified file. If some error found
+// during reading, it will be return, but the conf is still available.
+func Load(path string) (conf *Conf, err error) {
 	conf = &Conf{
 		path: villa.Path(path),
 		db:   make(map[string]interface{}),
@@ -22,20 +51,27 @@ func Load(path string) (conf *Conf) {
 
 	fin, err := conf.path.Open()
 	if err != nil {
-		// if file not exists, nothing read (but configuration still usable.
-		return
+		// if file not exists, nothing read (but configuration still usable.)
+		return conf, err
 	}
-	defer fin.Close()
+	func() {
+		defer fin.Close()
+	
+		dec := ljson.NewDecoder(fin)
+		dec.Decode(&conf.db)
+	}()
+	
+	loadInclude(conf.db)
 
-	dec := ljson.NewDecoder(fin)
-	dec.Decode(&conf.db)
-
-	return
+	return conf, nil
 }
 
 // fetch a value or a map[string]interface{} as an interface{},
 // returns nil if not found
 func (c *Conf) get(key string) interface{} {
+	if key == "" {
+		return c.db
+	}
 	parts := strings.Split(key, ".")
 	var vl interface{} = c.db
 	for _, p := range parts {
