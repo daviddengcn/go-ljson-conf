@@ -113,29 +113,29 @@ func (c *Conf) get(key string) interface{} {
 		if ok {
 			continue
 		}
-		
+
 		if strings.HasSuffix(p, "]") {
 			// try fetch the element in an array
 			idx := strings.Index(p, "[")
 			if idx > 0 {
-				indexes := strings.Split(p[idx+1:len(p) - 1], "][")
+				indexes := strings.Split(p[idx+1:len(p)-1], "][")
 				p = p[:idx]
 				vl, ok = mp[p]
 				if !ok {
 					return nil
 				}
-				
+
 				for _, sidx := range indexes {
 					idx, err := strconv.ParseInt(sidx, 0, 0)
 					if err != nil {
 						return nil
 					}
-					
+
 					arr, ok := vl.([]interface{})
 					if !ok {
 						return nil
 					}
-					
+
 					if idx < 0 || int(idx) >= len(arr) {
 						return nil
 					}
@@ -198,6 +198,14 @@ func (c *Conf) Bool(key string, def bool) bool {
 	return def
 }
 
+// floatToInt converts a float64 value into an int
+func floatToInt(f float64) int {
+	if f < 0 {
+		return int(f - 0.5)
+	}
+	return int(f + 0.5)
+}
+
 // Int retrieves a value as a string of the key. def is returned
 // if the value does not exist or is not a number. A float number will be
 // round up to the closest interger. A string will be converted using
@@ -210,7 +218,7 @@ func (c *Conf) Int(key string, def int) int {
 
 	switch v := vl.(type) {
 	case float64:
-		return int(v + 0.5)
+		return floatToInt(v)
 	case string:
 		i, err := strconv.ParseInt(v, 0, 0)
 		if err == nil {
@@ -311,8 +319,8 @@ func (c *Conf) IntList(key string, def []int) []int {
 		for _, el := range v {
 			var e int
 			switch et := el.(type) {
-			case int:
-				e = et
+			case float64:
+				e = floatToInt(et)
 			case string:
 				i, _ := strconv.ParseInt(et, 0, 0)
 				e = int(i)

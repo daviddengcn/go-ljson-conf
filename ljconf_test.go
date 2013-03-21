@@ -1,10 +1,10 @@
 package ljconf
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"testing"
-	"encoding/json"
 )
 
 func TestBasic(t *testing.T) {
@@ -40,6 +40,7 @@ func TestBasic(t *testing.T) {
 		// string-list
 		{"http.users", []string(nil), []string{"apple", "banana", "cat", "david"}},
 		// int-list
+		{"http.nums", []int(nil), []int{1, -2, 3}},
 		{"http.users", []int(nil), []int{0, 0, 0, 0}},
 
 		// included
@@ -55,42 +56,42 @@ func TestBasic(t *testing.T) {
 			act := cf.String(key, def)
 
 			if act != exp {
-				t.Errorf("[%s]: expected %v, but got %s", key, exp, act)
+				t.Errorf("[%s]: expected %v, but got %v", key, exp, act)
 			}
 		case bool:
 			def := c[1].(bool)
 			act := cf.Bool(key, def)
 
 			if act != exp {
-				t.Errorf("[%s]: expected %v, but got %s", key, exp, act)
+				t.Errorf("[%s]: expected %v, but got %v", key, exp, act)
 			}
 		case int:
 			def := c[1].(int)
 			act := cf.Int(key, def)
 
 			if act != exp {
-				t.Errorf("[%s]: expected %v, but got %s", key, exp, act)
+				t.Errorf("[%s]: expected %v, but got %v", key, exp, act)
 			}
 		case []interface{}:
 			def := c[1].([]interface{})
 			act := cf.List(key, def)
 
 			if !reflect.DeepEqual(act, exp) {
-				t.Errorf("[%s]: expected %v, but got %s", key, exp, act)
+				t.Errorf("[%s]: expected %v, but got %v", key, exp, act)
 			}
 		case []string:
 			def := c[1].([]string)
 			act := cf.StringList(key, def)
 
 			if !reflect.DeepEqual(act, exp) {
-				t.Errorf("[%s]: expected %v, but got %s", key, exp, act)
+				t.Errorf("[%s]: expected %v, but got %v", key, exp, act)
 			}
 		case []int:
 			def := c[1].([]int)
 			act := cf.IntList(key, def)
 
 			if !reflect.DeepEqual(act, exp) {
-				t.Errorf("[%s]: expected %v, but got %s", key, exp, act)
+				t.Errorf("[%s]: expected %v, but got %v", key, exp, act)
 			}
 		}
 	}
