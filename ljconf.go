@@ -86,7 +86,7 @@ func Load(fn string) (conf *Conf, err error) {
 	func() {
 		defer fin.Close()
 
-		dec := ljson.NewDecoder(fin)
+		dec := ljson.NewDecoder(newRcReader(fin))
 		dec.Decode(&conf.db)
 	}()
 
