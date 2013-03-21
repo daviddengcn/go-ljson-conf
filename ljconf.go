@@ -1,3 +1,26 @@
+/*
+A configuration package using Loose JSON as the format.
+
+Main features include:
+
+1) Loose JSON as the format
+2) Commenting
+3) Dot-seperated key
+4) Include
+
+A typical conf file:
+	{
+		// http settings
+		http: {
+			addr: "www.example.com"
+			ports: [80, 8080]
+		}
+		#include#: "others.conf"
+	}
+
+Visit the project page for more details:
+https://github.com/daviddengcn/go-ljson-conf
+*/
 package ljconf
 
 import (
