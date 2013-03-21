@@ -6,10 +6,12 @@ A powerful configuration package for go using Loose JSON as the format.
 
 Features
 --------
-**Loose JSON format**
+**Data format**
 
-Full compatible with JSON format but more easier for writing by hand.
+The data format is the Loose JSON, which is full compatible with JSON format but more easier for writing by hand.
 Visit [Loose JSON project](https://github.com/daviddengcn/ljson) for more details.
+
+Lines starting with `//` or `;` (excluding the leading spaces) are considered as comments and thus ignored.
 
 **Dot-seperated hierarchical key**
 
@@ -17,6 +19,7 @@ For configure:
 
 ```javascript
 {
+	// http settings
 	http: {
 		addr: "www.example.com"
 		ports: [80, 8080]
