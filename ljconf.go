@@ -1,11 +1,14 @@
 /*
-A configuration package using Loose JSON as the format.
+A configuration package using Loose JSON (https://github.com/daviddengcn/ljson) as the format.
 
 Main features include:
 
 1) Loose JSON as the format
+
 2) Commenting
+
 3) Dot-seperated key
+
 4) Include
 
 A typical conf file:
