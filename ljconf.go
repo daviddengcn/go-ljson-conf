@@ -15,13 +15,24 @@ type Conf struct {
 
 const INCLUDE_KEY_TAG = "#include#"
 
-func loadInclude(db map[string]interface{}) {
+func loadArrayInclude(arr []interface{}, dir villa.Path) {
+	for _, el := range arr {
+		switch vv := el.(type) {
+		case map[string]interface{}:
+			loadInclude(vv, dir)
+		case []interface{}:
+			loadArrayInclude(vv, dir)
+		}
+	}
+}
+
+func loadInclude(db map[string]interface{}, dir villa.Path) {
 	for k, v := range db {
 		if k == INCLUDE_KEY_TAG {
 			switch paths := v.(type) {
 			case string:
-				fmt.Println("Including", paths)
-				sub, err := Load(paths)
+				//				fmt.Println("Including", paths, "at", dir)
+				sub, err := Load(dir.Join(paths).S())
 				if err == nil {
 					// merge into current db
 					for sk, sv := range sub.db {
@@ -29,39 +40,57 @@ func loadInclude(db map[string]interface{}) {
 					}
 					// remove this entry
 					delete(db, k)
-					continue
 				}
-			}
-		}
-		
-		
-		if mv, ok := v.(map[string]interface{}); ok {
-			loadInclude(mv)
+				continue
+			case []interface{}:
+				for _, el := range paths {
+					if path, ok := el.(string); ok {
+						sub, err := Load(dir.Join(path).S())
+						if err == nil {
+							// merge into current db
+							for sk, sv := range sub.db {
+								db[sk] = sv
+							}
+						}
+					}
+				}
+				// remove this entry
+				delete(db, k)
+				continue
+			} // switch
+		} // if
+
+		switch vv := v.(type) {
+		case map[string]interface{}:
+			loadInclude(vv, dir)
+		case []interface{}:
+			loadArrayInclude(vv, dir)
 		}
 	}
 }
 
 // Load reads configurations from a speicified file. If some error found
 // during reading, it will be return, but the conf is still available.
-func Load(path string) (conf *Conf, err error) {
+func Load(fn string) (conf *Conf, err error) {
+	path, _ := villa.Path(fn).Abs()
 	conf = &Conf{
-		path: villa.Path(path),
+		path: path,
 		db:   make(map[string]interface{}),
 	}
 
-	fin, err := conf.path.Open()
+	fin, err := path.Open()
 	if err != nil {
 		// if file not exists, nothing read (but configuration still usable.)
 		return conf, err
 	}
 	func() {
 		defer fin.Close()
-	
+
 		dec := ljson.NewDecoder(fin)
 		dec.Decode(&conf.db)
 	}()
-	
-	loadInclude(conf.db)
+
+	loadInclude(conf.db, path.Dir())
 
 	return conf, nil
 }
@@ -81,8 +110,38 @@ func (c *Conf) get(key string) interface{} {
 		}
 
 		vl, ok = mp[p]
-		if !ok {
-			return nil
+		if ok {
+			continue
+		}
+		
+		if strings.HasSuffix(p, "]") {
+			// try fetch the element in an array
+			idx := strings.Index(p, "[")
+			if idx > 0 {
+				indexes := strings.Split(p[idx+1:len(p) - 1], "][")
+				p = p[:idx]
+				vl, ok = mp[p]
+				if !ok {
+					return nil
+				}
+				
+				for _, sidx := range indexes {
+					idx, err := strconv.ParseInt(sidx, 0, 0)
+					if err != nil {
+						return nil
+					}
+					
+					arr, ok := vl.([]interface{})
+					if !ok {
+						return nil
+					}
+					
+					if idx < 0 || int(idx) >= len(arr) {
+						return nil
+					}
+					vl = arr[idx]
+				}
+			}
 		}
 	}
 

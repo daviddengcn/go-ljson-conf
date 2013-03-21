@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"encoding/json"
 )
 
 func TestBasic(t *testing.T) {
-	cf, _ := Load("fortest.conf")
-	fmt.Println("Loaded:", cf.Object("", nil))
+	cf, _ := Load("testdata/fortest.conf")
+	js, _ := json.MarshalIndent(cf.Object("", nil), "", "    ")
+	fmt.Println("Loaded:", string(js))
 	// a case: ["key", "def", "exp"]
 	cases := [][3]interface{}{
 		// string
@@ -16,6 +18,11 @@ func TestBasic(t *testing.T) {
 		{"http.proxy", "", "proxy.example.com"},
 		{"http.true", "", "true"},
 		{"http.false", "", "false"},
+		{"http.users[1]", "", "banana"},
+		{"entries[0].apple.name", "<notfound>", "Apple"},
+		{"entries[2][0]", "<notfound>", "apple"},
+		{"entries[2][3][0]", "<notfound>", "david"},
+		{"entries[2][3][1].apple.name", "<notfound>", "Apple"},
 		// bool		
 		{"http.true", false, true},
 		{"http.truestr", false, true},
@@ -34,7 +41,7 @@ func TestBasic(t *testing.T) {
 		{"http.users", []string(nil), []string{"apple", "banana", "cat", "david"}},
 		// int-list
 		{"http.users", []int(nil), []int{0, 0, 0, 0}},
-		
+
 		// included
 		{"sub.value", "", "hello"},
 		{"http.sub.value", "", "hello"},
