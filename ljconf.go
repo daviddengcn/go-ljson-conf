@@ -30,6 +30,8 @@ import (
 	"fmt"
 	"github.com/daviddengcn/go-villa"
 	"github.com/daviddengcn/ljson"
+	"os"
+	"os/user"
 	"strconv"
 	"strings"
 )
@@ -37,6 +39,10 @@ import (
 type Conf struct {
 	path villa.Path
 	db   map[string]interface{}
+}
+
+func (c *Conf) Path() villa.Path {
+	return c.path
 }
 
 const INCLUDE_KEY_TAG = "#include#"
@@ -95,10 +101,36 @@ func loadInclude(db map[string]interface{}, dir villa.Path) {
 	}
 }
 
+func findPath(fn villa.Path) villa.Path {
+	if fn.IsAbs() {
+		return fn
+	}
+	
+	if fn.Exists() {
+		return fn.AbsPath()
+	}
+	
+	// Try .exe folder
+	tryFn := villa.Path(os.Args[0]).Dir().Join(fn)
+	if tryFn.Exists() {
+		return tryFn
+	}
+	
+	// Try user-home folder
+	cu, err := user.Current()
+	if err == nil {
+		tryFn = villa.Path(cu.HomeDir).Join(fn)
+		if tryFn.Exists() {
+			return tryFn
+		}
+	}
+	return fn.AbsPath()
+}
+
 // Load reads configurations from a speicified file. If some error found
 // during reading, it will be return, but the conf is still available.
 func Load(fn string) (conf *Conf, err error) {
-	path, _ := villa.Path(fn).Abs()
+	path := findPath(villa.Path(fn))
 	conf = &Conf{
 		path: path,
 		db:   make(map[string]interface{}),
