@@ -41,7 +41,7 @@ type Conf struct {
 	db   map[string]interface{}
 }
 
-func (c *Conf) Path() villa.Path {
+func (c *Conf) ConfPath() villa.Path {
 	return c.path
 }
 
@@ -232,6 +232,10 @@ func (c *Conf) String(key, def string) string {
 	}
 
 	return def
+}
+
+func (c *Conf) Path(key string, def villa.Path) villa.Path {
+	return villa.Path(c.String(key, def.S()))
 }
 
 // Bool retrieves a value as a bool of the key. def is returned

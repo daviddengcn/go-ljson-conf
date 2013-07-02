@@ -9,7 +9,7 @@ import (
 
 func TestBasic(t *testing.T) {
 	cf, _ := Load("testdata/fortest.conf")
-	fmt.Println("Path:", cf.Path())
+	fmt.Println("Path:", cf.ConfPath())
 	js, _ := json.MarshalIndent(cf.Object("", nil), "", "    ")
 	fmt.Println("Loaded:", string(js))
 	// a case: ["key", "def", "exp"]
@@ -100,7 +100,7 @@ func TestBasic(t *testing.T) {
 
 func TestPath(t *testing.T) {
 	cf, _ := Load("fortest.conf")
-	fmt.Println("Path:", cf.Path())
+	fmt.Println("Path:", cf.ConfPath())
 	js, _ := json.MarshalIndent(cf.Object("", nil), "", "    ")
 	fmt.Println("Loaded:", string(js))
 }
