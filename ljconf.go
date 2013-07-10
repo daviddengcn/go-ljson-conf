@@ -138,6 +138,10 @@ func Load(fn string) (conf *Conf, err error) {
 
 	fin, err := path.Open()
 	if err != nil {
+		if os.IsNotExist(err) {
+			// configuration file not existing is ok, an empty conf
+			return conf, nil
+		}
 		// if file not exists, nothing read (but configuration still usable.)
 		return conf, err
 	}

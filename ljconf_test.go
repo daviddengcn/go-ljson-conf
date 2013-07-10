@@ -110,3 +110,10 @@ func TestFormatError(t *testing.T) {
 		t.Errorf("Wrong format error not reported")
 	}
 }
+
+func TestConfNotExists(t *testing.T) {
+	_, err := Load("testdata/nonexist.conf")
+	if err != nil {
+		t.Error(err)
+	}
+}
