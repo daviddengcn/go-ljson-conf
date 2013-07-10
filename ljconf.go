@@ -34,6 +34,7 @@ import (
 	"os/user"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Conf struct {
@@ -267,11 +268,11 @@ func (c *Conf) Bool(key string, def bool) bool {
 }
 
 // floatToInt converts a float64 value into an int
-func floatToInt(f float64) int {
+func floatToInt(f float64) int64 {
 	if f < 0 {
-		return int(f - 0.5)
+		return int64(f - 0.5)
 	}
-	return int(f + 0.5)
+	return int64(f + 0.5)
 }
 
 // Int retrieves a value as a string of the key. def is returned
@@ -286,7 +287,7 @@ func (c *Conf) Int(key string, def int) int {
 
 	switch v := vl.(type) {
 	case float64:
-		return floatToInt(v)
+		return int(floatToInt(v))
 	case string:
 		i, err := strconv.ParseInt(v, 0, 0)
 		if err == nil {
@@ -388,7 +389,7 @@ func (c *Conf) IntList(key string, def []int) []int {
 			var e int
 			switch et := el.(type) {
 			case float64:
-				e = floatToInt(et)
+				e = int(floatToInt(et))
 			case string:
 				i, _ := strconv.ParseInt(et, 0, 0)
 				e = int(i)
@@ -404,5 +405,41 @@ func (c *Conf) IntList(key string, def []int) []int {
 		return res
 	}
 
+	return def
+}
+
+// Duration retrieves a value as a time.Duration. See comments of
+// time.ParseDuration for supported formats.
+func (c *Conf) Duration(key string, def time.Duration) time.Duration {
+	vl := c.get(key)
+	if vl == nil {
+		return def
+	}
+	
+	switch v := vl.(type) {
+	case string:
+		if d, err := time.ParseDuration(v); err == nil {
+			return d
+		}
+	}
+	
+	return def
+}
+
+// Duration retrieves a value as a time.Time. See comments of
+// time.Parse for layout definition.
+func (c *Conf) Time(key, layout string, def time.Time) time.Time {
+	vl := c.get(key)
+	if vl == nil {
+		return def
+	}
+	
+	switch v := vl.(type) {
+	case string:
+		if d, err := time.Parse(layout, v); err == nil {
+			return d
+		}
+	}
+	
 	return def
 }

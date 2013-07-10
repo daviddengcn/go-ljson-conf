@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestBasic(t *testing.T) {
@@ -42,6 +43,12 @@ func TestBasic(t *testing.T) {
 		// int-list
 		{"http.nums", []int(nil), []int{1, -2, 3}},
 		{"http.users", []int(nil), []int{0, 0, 0, 0}},
+		// duration
+		{"http.gap", "", "1m2s"},
+		{"http.gap", time.Duration(0), 1*time.Minute + 2*time.Second},
+		// time
+		{"http.start", "", "2013-7-10 17:39:25"},
+		{"http.start", time.Now(), time.Date(2013, 7, 10, 17, 39, 25, 0, time.UTC)},
 
 		// included
 		{"sub.value", "", "hello"},
@@ -72,6 +79,13 @@ func TestBasic(t *testing.T) {
 			if act != exp {
 				t.Errorf("[%s]: expected %v, but got %v", key, exp, act)
 			}
+		case float64:
+			def := c[1].(float64)
+			act := cf.Float(key, def)
+
+			if act != exp {
+				t.Errorf("[%s]: expected %v, but got %v", key, exp, act)
+			}
 		case []interface{}:
 			def := c[1].([]interface{})
 			act := cf.List(key, def)
@@ -93,6 +107,22 @@ func TestBasic(t *testing.T) {
 			if !reflect.DeepEqual(act, exp) {
 				t.Errorf("[%s]: expected %v, but got %v", key, exp, act)
 			}
+		case time.Duration:
+			def := c[1].(time.Duration)
+			act := cf.Duration(key, def)
+
+			if act != exp {
+				t.Errorf("[%s]: expected %v, but got %v", key, exp, act)
+			}
+		case time.Time:
+			def := c[1].(time.Time)
+			act := cf.Time(key, "2006-1-2 15:04:05", def)
+
+			if act != exp {
+				t.Errorf("[%s]: expected %v, but got %v", key, exp, act)
+			}
+		default:
+			t.Errorf("Unknown type of %v", c[2])
 		}
 	}
 }
