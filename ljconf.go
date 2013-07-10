@@ -141,12 +141,14 @@ func Load(fn string) (conf *Conf, err error) {
 		// if file not exists, nothing read (but configuration still usable.)
 		return conf, err
 	}
-	func() {
+	if err := func() error {
 		defer fin.Close()
 
 		dec := ljson.NewDecoder(newRcReader(fin))
-		dec.Decode(&conf.db)
-	}()
+		return dec.Decode(&conf.db)
+	}(); err != nil {
+		return conf, err
+	}
 
 	loadInclude(conf.db, path.Dir())
 

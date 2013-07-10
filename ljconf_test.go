@@ -2,16 +2,15 @@ package ljconf
 
 import (
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"testing"
 )
 
 func TestBasic(t *testing.T) {
 	cf, _ := Load("testdata/fortest.conf")
-	fmt.Println("Path:", cf.ConfPath())
+	t.Logf("Path: %v", cf.ConfPath())
 	js, _ := json.MarshalIndent(cf.Object("", nil), "", "    ")
-	fmt.Println("Loaded:", string(js))
+	t.Logf("Loaded: %v", string(js))
 	// a case: ["key", "def", "exp"]
 	cases := [][3]interface{}{
 		// string
@@ -100,7 +99,14 @@ func TestBasic(t *testing.T) {
 
 func TestPath(t *testing.T) {
 	cf, _ := Load("fortest.conf")
-	fmt.Println("Path:", cf.ConfPath())
+	t.Logf("Path: %v", cf.ConfPath())
 	js, _ := json.MarshalIndent(cf.Object("", nil), "", "    ")
-	fmt.Println("Loaded:", string(js))
+	t.Logf("Loaded: %v", string(js))
+}
+
+func TestFormatError(t *testing.T) {
+	_, err := Load("testdata/wrongfmt.conf")
+	if err == nil {
+		t.Errorf("Wrong format error not reported")
+	}
 }
