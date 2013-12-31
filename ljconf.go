@@ -27,6 +27,8 @@ https://github.com/daviddengcn/go-ljson-conf
 package ljconf
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/daviddengcn/go-villa"
 	"github.com/daviddengcn/ljson"
@@ -106,17 +108,17 @@ func findPath(fn villa.Path) villa.Path {
 	if fn.IsAbs() {
 		return fn
 	}
-	
+
 	if fn.Exists() {
 		return fn.AbsPath()
 	}
-	
+
 	// Try .exe folder
 	tryFn := villa.Path(os.Args[0]).Dir().Join(fn)
 	if tryFn.Exists() {
 		return tryFn
 	}
-	
+
 	// Try user-home folder
 	cu, err := user.Current()
 	if err == nil {
@@ -336,6 +338,26 @@ func (c *Conf) Object(key string, def map[string]interface{}) map[string]interfa
 	return def
 }
 
+// Decode section to struct object val
+func (c *Conf) Decode(key string, val interface{}) error {
+	var def map[string]interface{}
+	section := c.Object(key, def)
+	if len(section) == 0 {
+		return errors.New("empty section: " + key)
+	}
+
+	jval, err := json.Marshal(section)
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(jval, &val); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // List retrieves a value as a slice of interface{} of the key. def is returned
 // if the value does not exist or is not an array.
 func (c *Conf) List(key string, def []interface{}) []interface{} {
@@ -415,14 +437,14 @@ func (c *Conf) Duration(key string, def time.Duration) time.Duration {
 	if vl == nil {
 		return def
 	}
-	
+
 	switch v := vl.(type) {
 	case string:
 		if d, err := time.ParseDuration(v); err == nil {
 			return d
 		}
 	}
-	
+
 	return def
 }
 
@@ -433,13 +455,13 @@ func (c *Conf) Time(key, layout string, def time.Time) time.Time {
 	if vl == nil {
 		return def
 	}
-	
+
 	switch v := vl.(type) {
 	case string:
 		if d, err := time.Parse(layout, v); err == nil {
 			return d
 		}
 	}
-	
+
 	return def
 }

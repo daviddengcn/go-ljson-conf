@@ -24,7 +24,7 @@ func TestBasic(t *testing.T) {
 		{"entries[2][0]", "<notfound>", "apple"},
 		{"entries[2][3][0]", "<notfound>", "david"},
 		{"entries[2][3][1].apple.name", "<notfound>", "Apple"},
-		// bool		
+		// bool
 		{"http.true", false, true},
 		{"http.truestr", false, true},
 		{"http.false", true, false},
@@ -146,4 +146,28 @@ func TestConfNotExists(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+}
+
+func TestDecode(t *testing.T) {
+	type Apple struct {
+		Name   string   `json:"name"`
+		Weight string   `json:"weight"`
+		Colors []string `json:"colors"`
+	}
+
+	var val Apple
+	cf, _ := Load("testdata/fortest.conf")
+	key := "entries[0].apple"
+	cf.Decode(key, &val)
+	t.Logf("%#v\n", val)
+	if val.Name != "Apple" {
+		t.Errorf("[%s]name: expected %v, got %v", key, "Apple", val.Name)
+	}
+	if val.Weight != "10kg" {
+		t.Errorf("[%s]weight: expected %v, got %v", key, "10kg", val.Weight)
+	}
+	if val.Colors[1] != "green" {
+		t.Errorf("[%s]color[1]: expected %v, got %v", key, "green", val.Colors[1])
+	}
+
 }
