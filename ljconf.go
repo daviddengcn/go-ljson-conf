@@ -340,13 +340,12 @@ func (c *Conf) Object(key string, def map[string]interface{}) map[string]interfa
 
 // Decode section to struct object val
 func (c *Conf) Decode(key string, val interface{}) error {
-	var def map[string]interface{}
-	section := c.Object(key, def)
-	if len(section) == 0 {
+    vl := c.get(key)
+	if vl == nil {
 		return errors.New("empty section: " + key)
 	}
 
-	jval, err := json.Marshal(section)
+	jval, err := json.Marshal(vl)
 	if err != nil {
 		return err
 	}
