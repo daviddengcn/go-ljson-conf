@@ -340,7 +340,7 @@ func (c *Conf) Object(key string, def map[string]interface{}) map[string]interfa
 
 // Decode section to struct object val
 func (c *Conf) Decode(key string, val interface{}) error {
-    vl := c.get(key)
+	vl := c.get(key)
 	if vl == nil {
 		return errors.New("empty section: " + key)
 	}
