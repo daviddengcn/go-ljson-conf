@@ -171,3 +171,18 @@ func TestDecode(t *testing.T) {
 	}
 
 }
+
+func TestSection(t *testing.T) {
+	cf, _ := Load("testdata/fortest.conf")
+	sec, _ := cf.Section("http")
+	if sec.String("proxy", "") != "proxy.example.com" {
+		t.Errorf("expected %v, got %v", "proxy.example.com", sec.String("proxy", ""))
+	}
+
+	// test hierarchy key name
+	sec, _ = cf.Section("entries[1]")
+	t.Logf("%#v", sec)
+	if sec.String("sub.value", "") != "hello" {
+		t.Errorf("expected %v, got %v", "hello", sec.String("sub.value", ""))
+	}
+}

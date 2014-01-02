@@ -162,6 +162,21 @@ func Load(fn string) (conf *Conf, err error) {
 	return conf, nil
 }
 
+func (c *Conf) Section(key string) (conf *Conf, err error) {
+	sec := c.get(key)
+	if sec == nil {
+		err = errors.New("empty section: " + key)
+		return
+	}
+
+	conf = &Conf{
+		path: c.path,
+		db:   sec.(map[string]interface{}),
+	}
+
+	return
+}
+
 // fetch a value or a map[string]interface{} as an interface{},
 // returns nil if not found
 func (c *Conf) get(key string) interface{} {
