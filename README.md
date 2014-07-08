@@ -1,4 +1,4 @@
-go-ljson-conf[![GoSearch](http://go-search.org/badge?id=github.com%2Fdaviddengcn%2Fgo-ljson-conf)](http://go-search.org/view?id=github.com%2Fdaviddengcn%2Fgo-ljson-conf)
+go-ljson-conf [![GoSearch](http://go-search.org/badge?id=github.com%2Fdaviddengcn%2Fgo-ljson-conf)](http://go-search.org/view?id=github.com%2Fdaviddengcn%2Fgo-ljson-conf)
 =============
 
 A powerful configuration package for go using Loose JSON as the format.
