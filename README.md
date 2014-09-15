@@ -67,6 +67,13 @@ we got:
 }
 ```
 
+**Multi-path searching**
+We calling `Load` function, it searches the following path in order:
+1. For absolute path, it is directly used,
+1. Current directory,
+1. Directory of the executable, and
+1. User's home directory
+
 LICENSE
 -------
 BSD license.

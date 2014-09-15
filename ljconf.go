@@ -132,6 +132,11 @@ func findPath(fn villa.Path) villa.Path {
 
 // Load reads configurations from a speicified file. If some error found
 // during reading, it will be return, but the conf is still available.
+// If the given path is not absolute, Load tries to find the configure file in the
+// following order:
+// 1. Current directory
+// 2. Same folder the executable, and
+// 3. User's home folder.
 func Load(fn string) (conf *Conf, err error) {
 	path := findPath(villa.Path(fn))
 	conf = &Conf{
