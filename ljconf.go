@@ -149,6 +149,9 @@ func Load(fn string) (conf *Conf, err error) {
 		// if file not exists, nothing read (but configuration still usable.)
 		return conf, err
 	}
+
+	conf.lastStat, _ = os.Stat(fn)
+
 	if err := func() error {
 		defer fin.Close()
 
