@@ -40,8 +40,9 @@ import (
 )
 
 type Conf struct {
-	path villa.Path
-	db   map[string]interface{}
+	path     villa.Path
+	db       map[string]interface{}
+	lastStat os.FileInfo
 }
 
 func (c *Conf) ConfPath() villa.Path {
@@ -160,6 +161,27 @@ func Load(fn string) (conf *Conf, err error) {
 	loadInclude(conf.db, path.Dir())
 
 	return conf, nil
+}
+
+func (c *Conf) Watch(interval time.Duration, ch chan *Conf) error {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for _ = range ticker.C {
+		stat, _ := os.Stat(string(c.path))
+		if stat.ModTime() != c.lastStat.ModTime() {
+			c.lastStat = stat
+
+			cf, err := Load(string(c.path))
+			if err != nil {
+				return err
+			}
+
+			ch <- cf
+		}
+	}
+
+	return nil
 }
 
 func (c *Conf) Section(key string) (conf *Conf, err error) {
