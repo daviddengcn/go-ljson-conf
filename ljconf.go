@@ -171,7 +171,11 @@ func (c *Conf) Watch(interval time.Duration, ch chan *Conf) error {
 	defer ticker.Stop()
 
 	for _ = range ticker.C {
-		stat, _ := os.Stat(string(c.path))
+		stat, err := os.Stat(string(c.path))
+		if err != nil {
+			return err
+		}
+
 		if stat.ModTime() != c.lastStat.ModTime() {
 			c.lastStat = stat
 
