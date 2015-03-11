@@ -40,9 +40,8 @@ import (
 )
 
 type Conf struct {
-	path     villa.Path
-	db       map[string]interface{}
-	lastStat os.FileInfo
+	path villa.Path
+	db   map[string]interface{}
 }
 
 func (c *Conf) ConfPath() villa.Path {
@@ -150,8 +149,6 @@ func Load(fn string) (conf *Conf, err error) {
 		return conf, err
 	}
 
-	conf.lastStat, _ = os.Stat(fn)
-
 	if err := func() error {
 		defer fin.Close()
 
@@ -170,10 +167,14 @@ func Load(fn string) (conf *Conf, err error) {
 // If the configuration file changes, it's reloaded and sent to the specified channel as a *Conf.
 // TODO use inotify mechanism instead of poll.
 func Watch(curConf *Conf, interval time.Duration, ch chan *Conf) error {
+	configFileName := string(curConf.path)
+	lastStat, err := os.Stat(configFileName)
+	if err != nil {
+		return err
+	}
+
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
-
-	configFileName := string(curConf.path)
 	for _ = range ticker.C {
 		stat, err := os.Stat(configFileName)
 		if err != nil {
@@ -181,8 +182,8 @@ func Watch(curConf *Conf, interval time.Duration, ch chan *Conf) error {
 			return err
 		}
 
-		if stat.ModTime() != curConf.lastStat.ModTime() {
-			curConf.lastStat = stat
+		if stat.ModTime() != lastStat.ModTime() {
+			lastStat = stat
 
 			cf, err := Load(string(curConf.path))
 			if err != nil {
