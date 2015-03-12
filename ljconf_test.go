@@ -2,7 +2,11 @@ package ljconf
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"os"
 	"reflect"
+	"sync"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -185,4 +189,72 @@ func TestSection(t *testing.T) {
 	if sec.String("sub.value", "") != "hello" {
 		t.Errorf("expected %v, got %v", "hello", sec.String("sub.value", ""))
 	}
+}
+
+func TestWatchNormal(t *testing.T) {
+	oldConf := []byte(`{
+	name: "hello"
+	value: "world"
+}`)
+	newConf := []byte(`{
+	name: "hello1"
+	value: "world1"
+}`)
+
+	fn := "testdata/_hello.conf"
+	ioutil.WriteFile(fn, oldConf, 0644)
+	cf, _ := Load(fn)
+	if val := cf.String("name", ""); val != "hello" {
+		t.Errorf("expected %v, got %v", "hello", val)
+	}
+
+	ch := make(chan *Conf)
+	go Watch(cf, time.Millisecond*100, ch)
+
+	go func() {
+		time.Sleep(time.Second)             // wait for Watch enter into main loop
+		ioutil.WriteFile(fn, newConf, 0644) // update config
+	}()
+
+	cf1 := <-ch // got the new config
+	if val := cf1.String("name", ""); val != "hello1" {
+		t.Errorf("expected %v, got %v", "hello", val)
+	}
+
+	close(ch)
+	syscall.Unlink(fn)
+}
+
+func TestWatchEncounterError(t *testing.T) {
+	conf := []byte(`{
+	name: "hello"
+	value: "world"
+}`)
+	fn := "testdata/_hello.conf"
+	ioutil.WriteFile(fn, conf, 0644)
+	cf, _ := Load(fn)
+	if val := cf.String("name", ""); val != "hello" {
+		t.Errorf("expected %v, got %v", "hello", val)
+	}
+
+	ch := make(chan *Conf)
+	var err error
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		err = Watch(cf, time.Millisecond*100, ch)
+		wg.Done()
+	}()
+
+	// trigger os.PathError
+	syscall.Unlink(fn)
+
+	// wait for Watch finish
+	wg.Wait()
+
+	if _, ok := err.(*os.PathError); !ok {
+		t.Errorf("expected os.PathError, got %v", err)
+	}
+
+	close(ch)
 }
