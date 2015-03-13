@@ -153,6 +153,7 @@ func Load(fn string) (conf *Conf, err error) {
 		// if file not exists, nothing read (but configuration still usable.)
 		return conf, err
 	}
+
 	if err := func() error {
 		defer fin.Close()
 
@@ -165,6 +166,40 @@ func Load(fn string) (conf *Conf, err error) {
 	loadInclude(conf.db, path.Dir())
 
 	return conf, nil
+}
+
+// Watch periodically checks the configure file in curConf with the specified interval.
+// If the configuration file changes, it's reloaded and sent to the specified channel as a *Conf.
+// TODO use inotify mechanism instead of poll.
+func Watch(curConf *Conf, interval time.Duration, ch chan *Conf) error {
+	configFileName := string(curConf.path)
+	lastStat, err := os.Stat(configFileName)
+	if err != nil {
+		return err
+	}
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for _ = range ticker.C {
+		stat, err := os.Stat(configFileName)
+		if err != nil {
+			// e,g. the config file was deleted
+			return err
+		}
+
+		if stat.ModTime() != lastStat.ModTime() {
+			lastStat = stat
+
+			cf, err := Load(string(curConf.path))
+			if err != nil {
+				return err
+			}
+
+			ch <- cf
+		}
+	}
+
+	return nil
 }
 
 func (c *Conf) Section(key string) (conf *Conf, err error) {
